@@ -1,0 +1,160 @@
+\input{frontmatter}
+
+%# Titlepage ---------------------------------------------------------------------
+\title{Fundamentals of Foundation Models\\Cheat sheet}
+\author{Lukas Schüttler}
+\date{\today}
+\pagestyle{empty}
+
+%# Document ----------------------------------------------------------------------
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\begin{multicols}{2}
+    \section{Transformers}
+    \begin{mdframed}[style=eqbox]
+        \textbf{Token Embeddings}\\
+        $\mat{I} \in \mathbb{R}^{\mathrm{voc}\times N}$: Input Sequence - $\mat{M_{\mathrm{emb}}} \in \mathbb{R}^{\mathrm{dim\_emb} \times \mathrm{voc}}$: Embedding Matrix - $\mat{M_{\mathrm{pos}}} \in \mathbb{R}^{\mathrm{dim\_emb} \times \mathrm{N}}$: Positional Embedding - $\mat{E} \in \mathbb{R}^{\mathrm{dim\_emb} \times \mathrm{N}}$: Token Embeddings
+        \begin{align*}
+            \mat{E} = \mat{M}_\mathrm{emb} \times \mat{I} + \mat{M}_\mathrm{pos}
+        \end{align*}
+        \textbf{Self Attention}\\
+        $\mat{W} = \left[ \mat{W}_q ~ \mat{W}_k ~ \mat{W}_v \right]^\top \in \mathbb{R}^{3\mathrm{dim\_emb} \times \mathrm{dim\_emb}}$ - $\mat{Q}$, $\mat{K}$, $\mat{V}$ $\in \mathbb{R}^{\mathrm{dim\_emb} \times N}$: Query, Key, Value - $\mat{A} \in \mathbb{R}^{N \times N}$: Attention Matrix
+        \begin{align*}
+            \left[ \mat{Q} ~ \mat{K} ~ \mat{V} \right]^\top &= \mat{W} \times \mat{E}\\
+            \mat{A} &= \operatorname{softmax}\left( \frac{\mat{Q}^\top \mat{K}}{\sqrt{d_k}}\right)~\astrosun~ \mat{M}_\mathrm{mask}\\
+            \mat{E}_\mathrm{att} &= \mat{V} \times \mat{A}
+        \end{align*}
+        {\tiny With $d_k$ being the dimension of the key vectors. E.g. $\mathrm{pos\_emb}$ for single head attention}\\
+        \textbf{MLP}\\
+        $\mat{M}_\mathrm{up} \in \mathbb{R}^{4\mathrm{dim\_emb} \times \mathrm{dim\_emb}}$: Up projection - $\mat{M}_\mathrm{down} \in \mathbb{R}^{\mathrm{dim\_emb} \times 4\mathrm{dim\_emb}}$: Down projection
+        \begin{align*}
+            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att})))
+        \end{align*}
+        {\tiny With $\sigma$ being the activation applied elementwise}\\
+        \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.
+    \end{mdframed}
+    \section{Tokenizers}
+
+    \section{Training}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Datasets}
+        \textbf{Common Crawl}: Database of scraped websites.
+        \textbf{WebText}: OpenAI internal dataset. Scraped links from Reddit which received at least 3 karma. Page de-duplication and light-cleaning. \textit{8M} Documents, \textit{40GB} of text.\\
+        \textbf{OpenWebText}: Open replication of \textbf{WebText}\\
+        \textbf{C4}: Colossal Clean Crawled Corpus. Filtered version of \textbf{Common Crawl}. Discard pages with fewer than 5 sentences and lines with fewer than 3 words. Filter for unwanted keywords. Remove lines with the word Javascript. Remove pages with "\textit{lorem ipsum}". Remove pages with "\textit{\{}". Deduplicate any three-sentence span occurring multiple times. Filter pages that are not in English.\\
+        \textbf{The Stack}: Coding dataset.\\
+        \textbf{PeS2o}: STEM papers.\\
+        \textbf{DOLMA}: Combination of \textbf{Common Crawl}, \textbf{C4}, \textbf{The Stack}, \textbf{Reddit}, \textbf{PeS2o}, \textbf{Project Gutenberg}, \textbf{Wikipedia/Wikibooks}\\
+        \textbf{The Pile}: \textit{800GB} Dataset of Diverse Text. Academic, Internet, Prose, Dialoque and Misc (GitHub, Math ...)\\[1em]
+        \textbf{Dataset Cleaning Pipeline}: Language Filtering $\to$ Deduplication (by URL) $\to$ Quality Filters $\to$ Content Filters $\to$ Deduplication (by text overlap)
+    \end{mdframed}
+
+    \begin{mdframed}[style=eqbox]
+        \subsection{Evaluation}
+        \textbf{Perplexity}: $\exp\left( - \cfrac{1}{N} \sum_{i=1}^{N} \log P(t_i)\right)$\\
+        {\tiny With $t_i$ being the $i$th token in the expected output sequence}\\[1em]
+        \textbf{Benchmarks}\\
+        \textbf{Paloma}: Perplexity over a diverse set to text.\\
+        \textbf{HellaSwag}: QA Benchmark. Most likely answer by perplexity is chosen.\\
+        \textbf{MMLU}: QA Benchmark. Answers are part of the Prompt. Model can answer A, B, C or D. Most likely token is chosen.
+    \end{mdframed}
+
+    \begin{mdframed}[style=eqbox]
+        \subsection{Fine-Tuning}
+        Possible with around $1000$ high quality prompts and responses or more.\\
+        \textbf{RLHF} - Reinforcement Learning from Human Feedback
+        \begin{align*}
+            y_1,y_2 \propto \pi_{\mathrm{SFT}}(y \mid x) && y_w > y_\ell \mid x
+        \end{align*}
+        \vspace{-2em}
+        \begin{align*}
+            p^*(y_1 > y_2 \mid x) &= \frac{1}{1 + \exp(r^*(x \mid y_2) - r^*(x \mid y_1))}\\
+            \mathcal{L}(r) &= - \mathbb{E} \left[\log\sigma (r(x \mid y_\ell) - r(x \mid y_w)) \right]
+        \end{align*}
+        {\tiny Where $r$ is the reward model and $\mathcal{L}$ is the loss of the reward model.}
+        \begin{align*}
+            \max_\pi \mathbb{E}\left[r(x,y) - \beta \operatorname{D}_\mathrm{KL} (\pi(y \mid x) \mid \pi_\mathrm{ref} (y \mid x)\right]
+        \end{align*}
+        {\tiny $\operatorname{D}_\mathrm{KL}$ to reduce the deviation from the base model (SFT).\\}
+        \textbf{DPO} - Direct Preference Optimization
+        \begin{align*}
+            \mathcal{L}_\mathrm{DPO} &= - \mathbb{E} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta (y_w \mid x)}{\pi_\mathrm{ref} (y_w \mid x)} - \beta \log \frac{\pi_\theta (y_\ell \mid x)}{\pi_\mathrm{ref} (y_\ell \mid x)} \right) \right]
+        \end{align*}
+    \end{mdframed}
+
+    \section{Scaling Laws}
+    \begin{mdframed}[style=eqbox]
+        \begin{align*}
+            L(D) \approx \frac{A}{D^{\alpha_D}} && L(N) \approx \frac{B}{N^{\alpha_N}}
+        \end{align*}\vspace{-2em}
+        \begin{align*}
+            R(f_{N,D}) &= R(f^*) + (R(f_N) - R(f^*)) + (R(f_{N,D}) - R(f_N))\\
+            R(f_{N,D}) &= E + L(N) + L(D)
+        \end{align*}
+        {\small
+        Let $R(f^*)$ be the irreducible error, $R(f_N) - R(f^*)$ the approximation error of a N-parameter model and $R(f_{N,D}) - R(f_N)$ the statistical error\\
+        Parameter Values depend on data and precise model architecture.
+        }
+        \subsection{Compute Optimality}
+        $\arg\min L(N, D)$ for a constant compute budget $C(N, D) = H$ by choosing the best $N$ and $D$.\\
+        \textbf{Training curve envelope} - Plot training curves ($x$: $\log(\mathrm{FLOPS})$, $y$: $L(N,D)$), Find the envelope (Minimal loss per FLOP), Plot envelope points twice ($x$: $\log(\mathrm{FLOPS})$, $y$: $\log(D)$, $\log(N)$), Fit a line to the points and extrapolate to the desired FLOPS to find the optimal $N$ and $D$.\\
+        \textbf{IsoFLOP Curves} - Train various model sizes with $D$ such that the final FLOPs are constant, Repeat for different final FLOPs, Plot final loss (x: $\log(N)$, y: $L(N, D)$), Locate optimal model size for a given compute budget (loss valley), Plot optimal models ($x$: $\log(\mathrm{FLOPS})$, $y$: $\log(D)$, $\log(N)$) and extrapolate.\\
+        \textbf{Parametric fit} - Fit parametric Risk function $R(f_{N,D})$ to the training results (Training like IsoFLOP), Plot contours ($x$: $\log(\mathrm{FLOPS})$, $y$: $\log(N)$), Fit line such that it goes through each iso-loss contour at the point with the fewest FLOPs. Extrapolate to desired FLOPs.\\
+        Alternative - Plot isoFLOP slice (x: $\log(N)$, y: $L(N, D)$), plot parametric risk for desired compute budget, Locate the minimum.\\[0.5em]
+        \textbf{Key finding:} For compute optimal training $D$ should scale proportionally with $N$ - Compute Optimality doesn't consider inference cost
+    \end{mdframed}
+
+
+    \section{Ensembles and MoE}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Ensembles}
+        \textbf{Linear interpolation} - $P(y \mid x) = \sum_m P_m(y \mid x) P(m \mid x)$\\
+        \textbf{Log-linear interpolation} - $\operatorname{softmax}\left(\sum_m \log P(y \mid x) \lambda_m(x)\right)$\\
+        With $P_m(y \mid x)$ being the output of the model $m$ and $P(m \mid x)$ the "reliability" of the model given the Input. $\lambda_m$ is an interpolation coefficients for the model $m$.
+        \textbf{Parameter Averaging} - Calculate model weights by accumulating (average, weighted average ...) weights from multiple models
+    \end{mdframed}
+    \begin{mdframed}[style=eqbox]
+        \subsection{MoE - Mixture of Experts}
+        \textbf{Gaussian mixture model} - $p(y \mid x) = \sum_k p_{\theta_k}(y) p_k(x)$\\
+        Where $p_{\theta_k}$ is a gaussian distribution parametrized by $\theta_k$ giving the propability of the output $y$. $p_k$ is the probability of that distribution given the input $x$.\\
+        Allows the approximation of more complex distributions using only simple distributions (gaussian and logistic)\\[0.5em]
+        \textbf{Routing}\\
+        \textbf{Shazeer} -
+        \textbf{Mixtral} -
+        \textbf{Switch routing} -
+    \end{mdframed}
+
+    \section{Scalable Computing}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Multicore Processing}
+        GPUs are optimized for performing the same operation on different data points simultaneously.\\
+        \textbf{SIMD} - single-instruction multiple-data\\
+        \textbf{Amdahl's law} - Let the non-parallizable part of a program take a fraction $s$ of the time, then $m$ workers can result in a speedup of:\\\vspace{-1.5em}
+        \begin{align*}
+            \frac{1}{s + \frac{1 - s}{m}}
+        \end{align*}
+        \textbf{Floating Point Numbers}\\
+        \begin{tabular}{r|ccc}
+            & Sign & Exponential & Mantissa \\
+            \hline
+            \textbf{FP32} & 1 Bit & 8 Bits & 23 Bits\\
+            \textbf{FP16} & 1 Bit & 5 Bits & 10 Bits\\
+            \textbf{BF16} & 1 Bit & 8 Bits & 7 Bits
+        \end{tabular}\\[0.5em]
+        \textbf{BF16} - \textbf{FP32} range with \textbf{FP16} precision\\
+        \textbf{Error:} $\mid x - \widetilde{x} \mid \leq \epsilon / 2 \mid x \mid && \mathrm{with~} \epsilon \neq 0$
+        \vspace{0.5em}\subsubsection{CUDA}
+        thread - core; thread block - streaming multiprocessor (SM); kernel grid - CUDA-capable GPU\\
+        \textbf{CUDA Thread} - Smallest compute entity\\
+        \textbf{CUDA Block} - Group of threads (up to $1024$)\\
+        \textbf{Streaming Multiprocessor} - Executes one \textbf{CUDA Block}
+    \end{mdframed}
+
+    \begin{mdframed}[style=eqbox]
+        \subsection{Distributed Computing}
+    \end{mdframed}
+
+    \section{Vision Models}
+\end{multicols}
+\end{document}
