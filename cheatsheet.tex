@@ -11,6 +11,12 @@
 \maketitle
 \thispagestyle{empty}
 \begin{multicols}{2}
+    \section{General}
+    \begin{mdframed}[style=eqbox]
+        \textbf{SGD Updates} - $\theta_{k+1} - \theta_{k} - \sum_{i \in \mathcal{B}} \nabla \operatorname{loss}(f_{\theta_k}, i)$\\
+        {\tiny With $\mathcal{B}$ being a batch os size $B$}\\
+        \textbf{ARM} - Auto regressive model
+    \end{mdframed}
     \section{Transformers}
     \begin{mdframed}[style=eqbox]
         \textbf{Token Embeddings}\\
@@ -34,9 +40,28 @@
         {\tiny With $\sigma$ being the activation applied elementwise}\\
         \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.
     \end{mdframed}
-    \section{Tokenizers}
+    \section{Tokenization}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Tokenizers}
+        \textbf{BPE} - Entropy encoding\\
+        \textbf{WordPiece} - Pointwise mutual information
+    \end{mdframed}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Byte Pair Encoding}
+
+    \end{mdframed}
 
     \section{Training}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Evaluation}
+        \textbf{Perplexity}: $\exp\left( - \cfrac{1}{N} \sum_{i=1}^{N} \log P(t_i)\right)$\\
+        {\tiny With $t_i$ being the $i$th token in the expected output sequence}\\[1em]
+        \textbf{Benchmarks}\\
+        \textbf{Paloma}: Perplexity over a diverse set to text.\\
+        \textbf{HellaSwag}: QA Benchmark. Most likely answer by perplexity is chosen.\\
+        \textbf{MMLU}: QA Benchmark. Answers are part of the Prompt. Model can answer A, B, C or D. Most likely token is chosen.
+    \end{mdframed}
+
     \begin{mdframed}[style=eqbox]
         \subsection{Datasets}
         \textbf{Common Crawl}: Database of scraped websites.
@@ -48,16 +73,6 @@
         \textbf{DOLMA}: Combination of \textbf{Common Crawl}, \textbf{C4}, \textbf{The Stack}, \textbf{Reddit}, \textbf{PeS2o}, \textbf{Project Gutenberg}, \textbf{Wikipedia/Wikibooks}\\
         \textbf{The Pile}: \textit{800GB} Dataset of Diverse Text. Academic, Internet, Prose, Dialoque and Misc (GitHub, Math ...)\\[1em]
         \textbf{Dataset Cleaning Pipeline}: Language Filtering $\to$ Deduplication (by URL) $\to$ Quality Filters $\to$ Content Filters $\to$ Deduplication (by text overlap)
-    \end{mdframed}
-
-    \begin{mdframed}[style=eqbox]
-        \subsection{Evaluation}
-        \textbf{Perplexity}: $\exp\left( - \cfrac{1}{N} \sum_{i=1}^{N} \log P(t_i)\right)$\\
-        {\tiny With $t_i$ being the $i$th token in the expected output sequence}\\[1em]
-        \textbf{Benchmarks}\\
-        \textbf{Paloma}: Perplexity over a diverse set to text.\\
-        \textbf{HellaSwag}: QA Benchmark. Most likely answer by perplexity is chosen.\\
-        \textbf{MMLU}: QA Benchmark. Answers are part of the Prompt. Model can answer A, B, C or D. Most likely token is chosen.
     \end{mdframed}
 
     \begin{mdframed}[style=eqbox]
@@ -83,6 +98,27 @@
         \end{align*}
     \end{mdframed}
 
+    \section{Ensembles and MoE}
+    \begin{mdframed}[style=eqbox]
+        \subsection{Ensembles}
+        \textbf{Linear interpolation} - $P(y \mid x) = \sum_m P_m(y \mid x) P(m \mid x)$\\
+        \textbf{Log-linear interpolation} - $\operatorname{softmax}\left(\sum_m \log P(y \mid x) \lambda_m(x)\right)$\\
+        With $P_m(y \mid x)$ being the output of the model $m$ and $P(m \mid x)$ the "reliability" of the model given the Input. $\lambda_m$ is an interpolation coefficients for the model $m$.\\
+        \textbf{Parameter Averaging} - Calculate model weights by accumulating (average, weighted average ...) weights from multiple models
+    \end{mdframed}
+    \newpage
+
+    \begin{mdframed}[style=eqbox]
+        \subsection{MoE - Mixture of Experts}
+        \textbf{Gaussian mixture model} - $p(y \mid x) = \sum_k p_{\theta_k}(y) p_k(x)$\\
+        Where $p_{\theta_k}$ is a gaussian distribution parametrized by $\theta_k$ giving the propabillity of the output $y$. $p_k$ is the probability of that distribution given the input $x$.\\
+        Allows the approximation of more complex distributions using only simple distributions (gaussian and logistic)\\[0.5em]
+        \textbf{Routing}\\
+        \textbf{Shazeer} -
+        \textbf{Mixtral} -
+        \textbf{Switch routing} -
+    \end{mdframed}
+
     \section{Scaling Laws}
     \begin{mdframed}[style=eqbox]
         \begin{align*}
@@ -106,30 +142,16 @@
     \end{mdframed}
 
 
-    \section{Ensembles and MoE}
-    \begin{mdframed}[style=eqbox]
-        \subsection{Ensembles}
-        \textbf{Linear interpolation} - $P(y \mid x) = \sum_m P_m(y \mid x) P(m \mid x)$\\
-        \textbf{Log-linear interpolation} - $\operatorname{softmax}\left(\sum_m \log P(y \mid x) \lambda_m(x)\right)$\\
-        With $P_m(y \mid x)$ being the output of the model $m$ and $P(m \mid x)$ the "reliability" of the model given the Input. $\lambda_m$ is an interpolation coefficients for the model $m$.
-        \textbf{Parameter Averaging} - Calculate model weights by accumulating (average, weighted average ...) weights from multiple models
-    \end{mdframed}
-    \begin{mdframed}[style=eqbox]
-        \subsection{MoE - Mixture of Experts}
-        \textbf{Gaussian mixture model} - $p(y \mid x) = \sum_k p_{\theta_k}(y) p_k(x)$\\
-        Where $p_{\theta_k}$ is a gaussian distribution parametrized by $\theta_k$ giving the propability of the output $y$. $p_k$ is the probability of that distribution given the input $x$.\\
-        Allows the approximation of more complex distributions using only simple distributions (gaussian and logistic)\\[0.5em]
-        \textbf{Routing}\\
-        \textbf{Shazeer} -
-        \textbf{Mixtral} -
-        \textbf{Switch routing} -
-    \end{mdframed}
-
     \section{Scalable Computing}
     \begin{mdframed}[style=eqbox]
+        \subsection{CUDA}
+        \textbf{CUDA Thread} - Smallest compute entity\\
+        \textbf{CUDA Block} - Group of threads (up to $1024$)\\
+        \textbf{Streaming Multiprocessor} - Executes one \textbf{CUDA Block}
+    \end{mdframed}
+    \begin{mdframed}[style=eqbox]
         \subsection{Multicore Processing}
-        GPUs are optimized for performing the same operation on different data points simultaneously.\\
-        \textbf{SIMD} - single-instruction multiple-data\\
+        GPUs are optimized for performing the same operation on different data simultaneously (\textbf{SIMD} - single-instruction multiple-data)\\
         \textbf{Amdahl's law} - Let the non-parallizable part of a program take a fraction $s$ of the time, then $m$ workers can result in a speedup of:\\\vspace{-1.5em}
         \begin{align*}
             \frac{1}{s + \frac{1 - s}{m}}
@@ -144,17 +166,45 @@
         \end{tabular}\\[0.5em]
         \textbf{BF16} - \textbf{FP32} range with \textbf{FP16} precision\\
         \textbf{Error:} $\mid x - \widetilde{x} \mid \leq \epsilon / 2 \mid x \mid && \mathrm{with~} \epsilon \neq 0$
-        \vspace{0.5em}\subsubsection{CUDA}
-        thread - core; thread block - streaming multiprocessor (SM); kernel grid - CUDA-capable GPU\\
-        \textbf{CUDA Thread} - Smallest compute entity\\
-        \textbf{CUDA Block} - Group of threads (up to $1024$)\\
-        \textbf{Streaming Multiprocessor} - Executes one \textbf{CUDA Block}
     \end{mdframed}
 
     \begin{mdframed}[style=eqbox]
         \subsection{Distributed Computing}
+        \textbf{Communication Patterns}\\
+        \textbf{Push} - $A$ sends data to $B$\\
+        \textbf{Pull} - $B$ requests data from $A$\\
+        \textbf{Reduce} - Data from $C_1, \dots C_n$ is aggregated on $A$ (sum, average, min, max \dots)\\
+        \textbf{All-Reduce} - Reduce but result is distributed back to $C_1, \dots C_n$\\
+        \textbf{Scatter-Reduce} - \dots\\
+        \textbf{Wait} - $A$ waits fo a signal from $B$\\
+        \textbf{Barrier} - $C_1, \dots C_n$ wait until all $C_i$ reach a point of execution and then continue\\[0.5em]
+        \textbf{Training Methods}\\
+        \textbf{Synchronous} - Each machine computes a minibatch. Gradients are aggregated and redistributed. Machines are stalled until redistribution\\
+        \textbf{Asynchronous} - Each machine computes minibatch. Gradients are aggregated and redistributed when possible. Machines continue with next minibatch before redistribution\\
+        \textbf{Model parallel} - Model layers are distributed between machines (\textit{slower, than running on a single GPU})\\
+        \textbf{Model parallel Pipeline} - \textbf{Model parallel} but when $2$nd GPU processes $1$st micro-batch $1$st GPU starts with the $2$nd one \dots Backwards pass starts from last GPU when all micro-batches are done.
     \end{mdframed}
 
     \section{Vision Models}
+    \begin{mdframed}[style=eqbox]
+        \textbf{Segmentation} - Extract patch, classify center pixel - Fully convolutional network can classify all pixels at once, up-sampling\\
+        \textbf{Upconvolution} - Fractional Strided Convolution\\
+        \textbf{U-Net} - Down-sampling + Max pooling for classification, Up-sampling + Skip connection to regain detail
+        \subsection{Autoencoders}
+        Project input into low dimensional (latent) space $\mathcal{Z}$ so that original data can be recovered.\\
+        \textbf{VAE} - Variational Autoencoder\\
+        $Z$ has a known distribution $p_z(z \mid x)$ (normal distribution), $p_z$ is forced to be close to $\mathcal{N}(0, \mat{I})$ so that distributions of different $x$ overlap.\\
+        \textbf{Denoising Autoencoder} - High dimensional latent space would usually lead to identity $\implies$ parts of the input or latent representation are removed or noise is added to force robust representation.\\
+    \end{mdframed}
+
+    \begin{mdframed}[style=eqbox]
+        \subsection{Generative Models}
+        \textbf{GAN} - Generative Adversarial Network - \textit{PRO:} high-quality, fast - \textit{CON:} Implicit density, training unstable, only external measures for comparing\\
+        \textbf{VAE} - \textit{PRO:} Explicit density, fast - \textit{CON:} lower bound on density, coverage / quality trade-off\\
+        \textbf{Diffusion Models} - \textit{PRO:} flexible architecture, stable training, latent variable, high reselution - \textit{CON:} Expensive due to long markov chain
+        \begin{align*}
+            q(x_t \mid x_{t-1}) &= \mathcal{N}(\sqrt{1-\beta_t}x_{t-1},\beta_t \mat{I})
+        \end{align*}
+    \end{mdframed}
 \end{multicols}
 \end{document}
