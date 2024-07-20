@@ -1,9 +1,10 @@
 \input{frontmatter}
 
 %# Titlepage ---------------------------------------------------------------------
-\title{Fundamentals of Foundation Models\\Cheat sheet}
-\author{Lukas Schüttler}
-\date{\today}
+% Remove title for sake of compactness
+%\title{Fundamentals of Foundation Models\\Cheat sheet}
+%\author{Lukas Schüttler}
+%\date{\today}
 \pagestyle{empty}
 
 %# Document ----------------------------------------------------------------------
@@ -35,10 +36,21 @@
         \textbf{MLP}\\
         $\mat{M}_\mathrm{up} \in \mathbb{R}^{4\mathrm{dim\_emb} \times \mathrm{dim\_emb}}$: Up projection - $\mat{M}_\mathrm{down} \in \mathbb{R}^{\mathrm{dim\_emb} \times 4\mathrm{dim\_emb}}$: Down projection
         \begin{align*}
-            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att})))
+            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att}))
         \end{align*}
         {\tiny With $\sigma$ being the activation applied elementwise}\\
-        \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.
+        \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.\\
+        \scriptsize
+        \begin{tabular}{ p{2cm} p{3cm} p{3cm} }
+        \textbf{Operation} & \textbf{# Parameters} & \textbf{FLOPs per t. fwd pass} \\ \hline
+        Input embedding & $\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ + $\text{dim}\_{\text{embd}} \times \text{cntxt}\_{\text{len}}$ & $4 \times \text{dim}\_{\text{embd}}$ \\ \hline
+        Att: Q, K, V mult & $n\_{\text{layers}} \times 3~\text{dim}\_{\text{embd}}^2$ & $6~n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ \\ \hline
+        Att: $y = \text{att} * v$ computation & - & $4~n\_{\text{layers}} \times \text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
+        Att project & $n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ & $2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ \\ \hline
+        MLP & $n\_{\text{layers}} \times 2 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ & $4~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ \\ \hline
+        Embedd & - & $2~\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ \\ \hline
+        Total (non-embedding) & $N = 2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times (2~\text{dim}\_{\text{embd}} + \text{dim}\_{\text{feedforward}})$ & $2N + 2~n\_{\text{layers}} \times \text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
+        \end{tabular}
     \end{mdframed}
 
     \section{Tokenization}
@@ -63,32 +75,6 @@
         \textbf{HellaSwag}: QA Benchmark. Most likely answer by perplexity is chosen.\\
         \textbf{MMLU}: QA Benchmark. Answers are part of the Prompt. Model can answer A, B, C or D. Most likely token is chosen.
     \end{mdframed}
-
-    \section{Parmams \& FLOPs}
-    \begin{mdframed}[style=eqbox]
-        % \begin{tabular}{r|ccc}
-        %     & Sign & Exponential & Mantissa \\
-        %     \hline
-        %     \textbf{FP32} & 1 Bit & 8 Bits & 23 Bits\\
-        %     \textbf{FP16} & 1 Bit & 5 Bits & 10 Bits\\
-        %     \textbf{BF16} & 1 Bit & 8 Bits & 7 Bits
-        % \end{tabular}\\[0.5em]
-            \scriptsize
-            \begin{tabular}{ p{2cm} p{3cm} p{3cm} }
-            \textbf{Operation} & \textbf{# Parameters} & \textbf{FLOPs per t. fwd pass} \\ \hline
-            Input embedding & $\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ + $\text{dim}\_{\text{embd}} \times \text{cntxt}\_{\text{len}}$ & $4 \times \text{dim}\_{\text{embd}}$ \\ \hline
-            Att: Q, K, V mult & $n\_{\text{layers}} \times 3 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{embd}}$ & $2~n\_{\text{layers}} \times 3 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{embd}}$ \\ \hline
-            Att: $y = \text{att} * v$ computation & - & $2~n\_{\text{layers}} \times 2~\text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
-            Att project & $n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{embd}}$ & $2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{embd}}$ \\ \hline
-            MLP & $n\_{\text{layers}} \times 2 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ & $2~n\_{\text{layers}} \times 2 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ \\ \hline
-            Embedd & - & $2~\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ \\ \hline
-            Total (non-embedding) & $N = 2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times (2~\text{dim}\_{\text{embd}} + \text{dim}\_{\text{feedforward}})$ & $2N + 2~n\_{\text{layers}} \times \text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
-            \end{tabular}
-            % \caption{General overview of number of parameters and FLOPs per token for different operations in a transformer architecture.}
-
-    \end{mdframed}
-
-
 
     \begin{mdframed}[style=eqbox]
         \subsection{Datasets}
