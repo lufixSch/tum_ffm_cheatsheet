@@ -35,6 +35,12 @@
         \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.
     \end{mdframed}
     \section{Tokenizers}
+    \begin{mdframed}[style=eqbox]
+        \textbf{Pre-tokenization}: Split input text via regex to prevent greedy encoding of words in different commen variations: \textid{dog? dog!}.
+        Additionally tokens lead with a space: ' \textit{and}'.\\
+        \textbf{Byte Pair Encoding (BPE)}: Given a base vocabulary size of 256 with UTF-8 BPE encodes additonal pairs of bytes as subsequent numbers to 256 eg. 257, 258...\\
+        Pairs are encoded based on their frequency of occurence to achive the maxiumn compresion. The process is itteratively repeated on a vocabulary set unitl the maxiumn voc. size is reached (e.g. GPT-4 ~100k) or the algorithm runs out of pairs.\\
+    \end{mdframed}
 
     \section{Training}
     \begin{mdframed}[style=eqbox]
