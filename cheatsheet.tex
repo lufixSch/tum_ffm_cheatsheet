@@ -1,9 +1,8 @@
 \input{frontmatter}
 
 %# Titlepage ---------------------------------------------------------------------
-\title{Fundamentals of Foundation Models\\Cheat sheet}
+\title{Fundamentals of Foundation Models - Cheat sheet}
 \author{Lukas Schüttler}
-\date{\today}
 \pagestyle{empty}
 
 %# Document ----------------------------------------------------------------------
@@ -35,10 +34,21 @@
         \textbf{MLP}\\
         $\mat{M}_\mathrm{up} \in \mathbb{R}^{4\mathrm{dim\_emb} \times \mathrm{dim\_emb}}$: Up projection - $\mat{M}_\mathrm{down} \in \mathbb{R}^{\mathrm{dim\_emb} \times 4\mathrm{dim\_emb}}$: Down projection
         \begin{align*}
-            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att})))
+            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att}))
         \end{align*}
         {\tiny With $\sigma$ being the activation applied elementwise}\\
-        \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.
+        \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.\\
+        \scriptsize
+        \begin{tabular}{ p{2cm} p{3cm} p{3cm} }
+        \textbf{Operation} & \textbf{# Parameters} & \textbf{FLOPs per t. fwd pass} \\ \hline
+        Input embedding & $\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ + $\text{dim}\_{\text{embd}} \times \text{cntxt}\_{\text{len}}$ & $4 \times \text{dim}\_{\text{embd}}$ \\ \hline
+        Att: Q, K, V mult & $n\_{\text{layers}} \times 3~\text{dim}\_{\text{embd}}^2$ & $6~n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ \\ \hline
+        Att: $y = \text{att} * v$ computation & - & $4~n\_{\text{layers}} \times \text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
+        Att project & $n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ & $2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}}^2$ \\ \hline
+        MLP & $n\_{\text{layers}} \times 2 \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ & $4~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times \text{dim}\_{\text{feedforward}}$ \\ \hline
+        Embedd & - & $2~\text{dim}\_{\text{embd}} \times \text{vocab}\_{\text{size}}$ \\ \hline
+        Total (non-embedding) & $N = 2~n\_{\text{layers}} \times \text{dim}\_{\text{embd}} \times (2~\text{dim}\_{\text{embd}} + \text{dim}\_{\text{feedforward}})$ & $2N + 2~n\_{\text{layers}} \times \text{cntxt}\_{\text{len}} \times \text{dim}\_{\text{embd}}$ \\ \hline
+        \end{tabular}
     \end{mdframed}
 
     \section{Tokenization}
