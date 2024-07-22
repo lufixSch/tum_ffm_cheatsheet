@@ -37,7 +37,7 @@
         \textbf{MLP}\\
         $\mat{M}_\mathrm{up} \in \mathbb{R}^{4\mathrm{dim\_emb} \times \mathrm{dim\_emb}}$: Up projection - $\mat{M}_\mathrm{down} \in \mathbb{R}^{\mathrm{dim\_emb} \times 4\mathrm{dim\_emb}}$: Down projection
         \begin{align*}
-            E_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att}))
+            \mat{E}_\mathrm{mlp} = \sigma(\mat{M}_\mathrm{down} \times \sigma (\mat{M}_\mathrm{up} \times \mat{E}_\mathrm{att}))
         \end{align*}\vspace{-12pt}\\
         {\tiny With $\sigma$ being the activation applied elementwise}\\[0.5em]
         \textbf{Computation:} $\mathrm{FLOPS} \approx 6N \cdot D$ - With $D$ being the number of training tokens.\\
@@ -131,10 +131,10 @@
         \textbf{Gaussian mixture model} - $p(y \mid x) = \sum_k p_{\theta_k}(y) p_k(x)$\\
         Where $p_{\theta_k}$ is a gaussian distribution parametrized by $\theta_k$ giving the propabillity of the output $y$. $p_k$ is the probability of that distribution given the input $x$.\\
         Allows the approximation of more complex distributions using only simple distributions (gaussian and logistic)\\[0.5em]
-        \textbf{Routing}\\
-        \textbf{Shazeer} -
-        \textbf{Mixtral} -
-        \textbf{Switch routing} -
+        \textbf{Routing} - $\mat{W}_r$: Router weights\\
+        \textbf{Shazeer} - $\mat{G}(x) = \operatorname{softmax} (\mat{W}_r \mat{x})$, $\mat{y} = \sum_{k \in \mathrm{top-k}} \mat{G}_k(x) \mat{E}_\mathrm{mlp}(\mat{x})$\\
+        \textbf{Mixtral} - $\mat{G}(x) = \operatorname{softmax} (\operatorname{topK} (\mat{W}_r \mat{x}))$, $\mat{y} = \sum_k \mat{G}_k(x) \mat{E}_\mathrm{mlp}(\mat{x})$\\
+        \textbf{Switch routing} - Improves distributed training, Batch is split between experts, If expert reaches maximum tokens remaining tokens are passed through without calculation
     \end{mdframed}
 
     \section{Scaling Laws}
@@ -162,12 +162,6 @@
 
     \section{Scalable Computing}
     \begin{mdframed}[style=eqbox]
-        \subsection{CUDA}
-        \textbf{CUDA Thread} - Smallest compute entity\\
-        \textbf{CUDA Block} - Group of threads (up to $1024$)\\
-        \textbf{Streaming Multiprocessor} - Executes one \textbf{CUDA Block}
-    \end{mdframed}
-    \begin{mdframed}[style=eqbox]
         \subsection{Multicore Processing}
         GPUs are optimized for performing the same operation on different data simultaneously (\textbf{SIMD} - single-instruction multiple-data)\\
         \textbf{Amdahl's law} - Let the non-parallizable part of a program take a fraction $s$ of the time, then $m$ workers can result in a speedup of:\\\vspace{-1.5em}
@@ -184,6 +178,12 @@
         \end{tabular}\\[0.5em]
         \textbf{BF16} - \textbf{FP32} range with \textbf{FP16} precision\\
         \textbf{Error:} $\mid x - \widetilde{x} \mid \leq \epsilon / 2 \mid x \mid && \mathrm{with~} \epsilon \neq 0$
+    \end{mdframed}
+    \begin{mdframed}[style=eqbox]
+        \subsection{CUDA}
+        \textbf{CUDA Thread} - Smallest compute entity\\
+        \textbf{CUDA Block} - Group of threads (up to $1024$)\\
+        \textbf{Streaming Multiprocessor} - Executes one \textbf{CUDA Block}
     \end{mdframed}
 
     \begin{mdframed}[style=eqbox]
@@ -224,5 +224,6 @@
             q(x_t \mid x_{t-1}) &= \mathcal{N}(\sqrt{1-\beta_t}x_{t-1},\beta_t \mat{I})
         \end{align*}
     \end{mdframed}
+\vfill\null
 \end{multicols}
 \end{document}
